@@ -63,6 +63,7 @@ rec {
             CatalystViewJSON
             CatalystViewTT
             CatalystXScriptServerStarman
+            CatalystXRoleApplicator
             CryptRandPasswd
             DBDPg
             DBDSQLite
@@ -75,6 +76,7 @@ rec {
             IOCompress
             IPCRun
             JSONXS
+            JSONAny
             LWP
             LWPProtocolHttps
             NetAmazonS3

@@ -272,9 +272,9 @@ sub push_bitbucket : Chained('api') PathPart('push-bitbucket') Args(0) {
     # Bitbucket event payload: https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
 
     my $in = $c->request->{data};
-    my $username = $in->{actor}->{username} or die;
-    my $repo = $in->{repository}->{name} or die;
-    my $link = join "", 'git@bitbucket.org:', $username, '/', $repo, '.git';
+    my $owner = $in->{repository}->{owner}->{username} or die;
+    my $repo = $in->{repository}->{full_name} or die;
+    my $link = join "", 'git@bitbucket.org:', $repo, '.git';
     print STDERR "got push from $link\n";
 
     triggerJobset($self, $c, $_, 0) foreach $c->model('DB::Jobsets')->search(

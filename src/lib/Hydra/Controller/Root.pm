@@ -70,7 +70,8 @@ sub begin :Private {
     $_->supportedInputTypes($c->stash->{inputTypes}) foreach @{$c->hydra_plugins};
 
     # XSRF protection: require POST requests to have the same origin.
-    if ($c->req->method eq "POST" && $c->req->path ne "api/push-github") {
+    my $whitelist = ["api/push-github", "api/push-bitbucket"];
+    if ($c->req->method eq "POST" && (not $c->req->path ~~ $whitelist)) {
         my $referer = $c->req->header('Origin');
         $referer //= $c->req->header('Referer');
         my $base = $c->req->base;

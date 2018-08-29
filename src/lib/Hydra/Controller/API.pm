@@ -264,5 +264,26 @@ sub push_github : Chained('api') PathPart('push-github') Args(0) {
 }
 
 
+sub push_bitbucket : Chained('api') PathPart('push-bitbucket') Args(0) {
+    my ($self, $c) = @_;
+
+    $c->{stash}->{json}->{jobsetsTriggered} = [];
+
+    # Bitbucket event payload: https://confluence.atlassian.com/bitbucket/event-payloads-740262817.html
+
+    my $in = $c->request->{data};
+    my $username = $in->{actor}->{username} or die;
+    my $repo = $in->{repository}->{name} or die;
+    my $link = join "", 'git@bitbucket.org:', $username, '/', $repo, '.git';
+    print STDERR "got push from $link\n";
+
+    triggerJobset($self, $c, $_, 0) foreach $c->model('DB::Jobsets')->search(
+        { 'project.enabled' => 1, 'me.enabled' => 1 },
+        { join => 'project'
+        , where => \ [ 'exists (select 1 from JobsetInputAlts where project = me.project and jobset = me.name and value like ?)', [ 'value', $link ] ]
+        });
+    $c->response->body("");
+}
+
 
 1;

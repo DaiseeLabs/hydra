@@ -1,13 +1,14 @@
-{ hydraSrc ? { outPath = ./.; revCount = 1234; rev = "abcdef"; }
+{ hydraSrc ? builtins.fetchGit ./.
+, nixpkgs ? builtins.fetchGit { url = https://github.com/NixOS/nixpkgs-channels.git; ref = "nixos-18.03-small"; }
 , officialRelease ? false
 , shell ? false
 }:
 
-with import <nixpkgs/lib>;
+with import (nixpkgs + "/lib");
 
 let
 
-  pkgs = import <nixpkgs> {};
+  pkgs = import nixpkgs {};
 
   genAttrs' = genAttrs [ "x86_64-linux" /* "i686-linux" */ ];
 
@@ -37,11 +38,11 @@ rec {
 
   build = genAttrs' (system:
 
-    with import <nixpkgs> { inherit system; };
+    with import nixpkgs { inherit system; };
 
     let
 
-      #nix = nixUnstable;
+      nix = pkgs.nixUnstable or pkgs.nix;
 
       perlDeps = buildEnv {
         name = "hydra-perl-deps";
@@ -111,6 +112,7 @@ rec {
           guile # optional, for Guile + Guix support
           perlDeps perl nix
           postgresql95 # for running the tests
+          boost
         ];
 
       hydraPath = lib.makeBinPath (
@@ -172,7 +174,7 @@ rec {
     '';
 
   tests.install = genAttrs' (system:
-    with import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+    with import (nixpkgs + "/nixos/lib/testing.nix") { inherit system; };
     simpleTest {
       machine = hydraServer build.${system};
       testScript =
@@ -187,7 +189,7 @@ rec {
     });
 
   tests.api = genAttrs' (system:
-    with import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+    with import (nixpkgs + "/nixos/lib/testing.nix") { inherit system; };
     simpleTest {
       machine = hydraServer build.${system};
       testScript =
@@ -216,7 +218,7 @@ rec {
 
   /*
   tests.s3backup = genAttrs' (system:
-    with import <nixpkgs/nixos/lib/testing.nix> { inherit system; };
+    with import (nixpkgs + "/nixos/lib/testing.nix") { inherit system; };
     let hydra = build.${system}
     simpleTest {
       machine =
